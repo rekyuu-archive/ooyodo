@@ -17,5 +17,5 @@ erl_crash.dump
 *.ez
 mix.lock
 
-# Ignore secret config
+# Ignore secret config (oops)
 secret.exs
