@@ -19,7 +19,7 @@ defmodule Ooyodo.Module do
       end
 
       def handle_info({:update, id}, state) do
-        new_id = Nadia.get_updates([offset: id]) |> process_updates
+        new_id = get_updates([offset: id]) |> process_updates
 
         :erlang.send_after(100, self, {:update, new_id + 1})
         {:noreply, state}
@@ -50,17 +50,12 @@ defmodule Ooyodo.Module do
     end
   end
 
-  defmacro handle(:update, do: body) do
-    quote do
-      def process_update(%Nadia.Model.Update{message: var!(message)} = var!(update)) do
-        unquote(body)
-      end
-    end
-  end
-
   defmacro handle(:edited_message, do: body) do
     quote do
-      def process_update(%Nadia.Model.Update{:edited_message => var!(message)} = var!(update)) when var!(message) != nil do
+      def process_update(
+        %Nadia.Model.Update{
+          edited_message: var!(message)
+        } = var!(update)) when var!(message) != nil do
         unquote(body)
       end
     end
@@ -68,7 +63,13 @@ defmodule Ooyodo.Module do
 
   defmacro handle(:inline_query, do: body) do
     quote do
-      def process_update(%Nadia.Model.Update{:inline_query => var!(object), :message => var!(message)} = var!(update)) when var!(object) != nil do
+      def process_update(
+        %Nadia.Model.Update{
+          inline_query: %{
+            query: var!(query),
+            id: var!(id)
+          } = var!(object)
+        } = var!(update)) when var!(object) != nil do
         unquote(body)
       end
     end
@@ -76,7 +77,11 @@ defmodule Ooyodo.Module do
 
   defmacro handle(:chosen_inline_result, do: body) do
     quote do
-      def process_update(%Nadia.Model.Update{:chosen_inline_result => var!(object), :message => var!(message)} = var!(update)) when var!(object) != nil do
+      def process_update(
+        %Nadia.Model.Update{
+          chosen_inline_result: var!(object),
+          message: var!(message)
+        } = var!(update)) when var!(object) != nil do
         unquote(body)
       end
     end
@@ -84,7 +89,11 @@ defmodule Ooyodo.Module do
 
   defmacro handle(:callback_query, do: body) do
     quote do
-      def process_update(%Nadia.Model.Update{:callback_query => var!(object), :message => var!(message)} = var!(update)) when var!(object) != nil do
+      def process_update(
+        %Nadia.Model.Update{
+          callback_query: var!(object),
+          message: var!(message)
+        } = var!(update)) when var!(object) != nil do
         unquote(body)
       end
     end
@@ -92,7 +101,13 @@ defmodule Ooyodo.Module do
 
   defmacro handle(type, do: body) do
     quote do
-      def process_update(%Nadia.Model.Update{message: %Nadia.Model.Message{unquote(type) => var!(object)} = var!(message)} = var!(update)) when var!(object) != nil do
+      def process_update(
+        %Nadia.Model.Update{
+          message: %Nadia.Model.Message{
+            unquote(type) => var!(object),
+            chat: %{id: var!(id)}
+          } = var!(message)
+        } = var!(update)) when var!(object) != nil do
         unquote(body)
       end
     end
@@ -116,7 +131,7 @@ defmodule Ooyodo.Module do
 
   defmacro reply(function) do
     quote do
-      var!(message).chat.id |> unquote(function)
+      var!(id) |> unquote(function)
     end
   end
 

@@ -24,4 +24,12 @@ $ mix deps.get
 $ mix appname
 ```
 
-Check out the docs at https://hexdocs.pm/ooyodo for further implementation.
+## Development
+
+Tested update types:
+
+[x] Messages
+[x] Inline queries
+[x] Edited messages
+[ ] Chosen inline results
+[ ] Callback queries
