@@ -138,11 +138,11 @@ defmodule Ooyodo.Module do
   defp gen_commands(text, do: function) do
     quote do
       if var!(message) != nil do
-        if var!(object) |> String.trim_trailing == "/" <> unquote(text) do
+        if var!(object) |> String.split |> List.first == "/" <> unquote(text) do
           Task.async(fn -> unquote(function) end)
         end
 
-        if var!(object) |> String.trim_trailing == "/" <> unquote(text) <> "@" <> unquote(@bot_name) do
+        if var!(object) |> String.split |> List.first == "/" <> unquote(text) <> "@" <> unquote(@bot_name) do
           Task.async(fn -> unquote(function) end)
         end
       end
