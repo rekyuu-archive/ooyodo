@@ -178,7 +178,7 @@ defmodule Mix.Tasks.Ooyodo.New do
 
     def project do
       [app: :<%= @app %>,
-       version: "0.1.0",
+       version: "0.1.1",
        elixir: "~> <%= @version %>",
        build_embedded: Mix.env == :prod,
        start_permanent: Mix.env == :prod,
