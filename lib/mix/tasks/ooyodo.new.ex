@@ -140,7 +140,15 @@ defmodule Mix.Tasks.Ooyodo.New do
   $ mix appname
   ```
 
-  Check out the docs at https://hexdocs.pm/ooyodo for further implementation.
+  ## Development
+
+  Tested update types:
+
+  [x] Messages
+  [x] Inline queries
+  [x] Edited messages
+  [ ] Chosen inline results
+  [ ] Callback queries
   """
 
   embed_text :gitignore, """
@@ -230,9 +238,50 @@ defmodule Mix.Tasks.Ooyodo.New do
   defmodule <%= @mod %>.Bot do
     use <%= @mod %>.Module
 
+    handle :inline_query do
+      results = [
+        %Nadia.Model.InlineQueryResult.Article{
+          id: "0",
+          title: query,
+          input_message_content: %Nadia.Model.InputMessageContent.Text{
+            message_text: query,
+            parse_mode: "Markdown"
+          }
+        }
+      ]
+
+      reply answer_inline_query(results)
+    end
+
     handle :text do
-      command "ping", do: reply send_message("Pong!")
-      match ["hi", "hello"], do: reply send_message("Hello!")
+      command "ping", do: reply send_message "Pong!"
+
+      match ["hi", "hello"], do: reply send_message "Hello!"
+
+      command "start" do
+        IO.inspect id
+        reply send_message "Pick one!", [
+          reply_markup: %Nadia.Model.ReplyKeyboardMarkup{
+            keyboard: [
+              [%Nadia.Model.KeyboardButton{text: "Heads"},
+               %Nadia.Model.KeyboardButton{text: "Tails"}],
+              [%Nadia.Model.KeyboardButton{text: "Cancel"}]
+            ]
+          }
+        ]
+      end
+
+      match ["Heads", "Tails"] do
+        reply send_message "Nice!", [
+          reply_markup: %Nadia.Model.ReplyKeyboardHide{}
+        ]
+      end
+
+      match "Cancel" do
+        reply send_message "Alright, cancelled.", [
+          reply_markup: %Nadia.Model.ReplyKeyboardHide{}
+        ]
+      end
     end
   end
   """
@@ -259,7 +308,7 @@ defmodule Mix.Tasks.Ooyodo.New do
         end
 
         def handle_info({:update, id}, state) do
-          new_id = Nadia.get_updates([offset: id]) |> process_updates
+          new_id = get_updates([offset: id]) |> process_updates
 
           :erlang.send_after(100, self, {:update, new_id + 1})
           {:noreply, state}
@@ -290,17 +339,12 @@ defmodule Mix.Tasks.Ooyodo.New do
       end
     end
 
-    defmacro handle(:update, do: body) do
-      quote do
-        def process_update(%Nadia.Model.Update{message: var!(message)} = var!(update)) do
-          unquote(body)
-        end
-      end
-    end
-
     defmacro handle(:edited_message, do: body) do
       quote do
-        def process_update(%Nadia.Model.Update{:edited_message => var!(message)} = var!(update)) when var!(message) != nil do
+        def process_update(
+          %Nadia.Model.Update{
+            edited_message: var!(message)
+          } = var!(update)) when var!(message) != nil do
           unquote(body)
         end
       end
@@ -308,7 +352,13 @@ defmodule Mix.Tasks.Ooyodo.New do
 
     defmacro handle(:inline_query, do: body) do
       quote do
-        def process_update(%Nadia.Model.Update{:inline_query => var!(object), :message => var!(message)} = var!(update)) when var!(object) != nil do
+        def process_update(
+          %Nadia.Model.Update{
+            inline_query: %{
+              query: var!(query),
+              id: var!(id)
+            } = var!(object)
+          } = var!(update)) when var!(object) != nil do
           unquote(body)
         end
       end
@@ -316,7 +366,11 @@ defmodule Mix.Tasks.Ooyodo.New do
 
     defmacro handle(:chosen_inline_result, do: body) do
       quote do
-        def process_update(%Nadia.Model.Update{:chosen_inline_result => var!(object), :message => var!(message)} = var!(update)) when var!(object) != nil do
+        def process_update(
+          %Nadia.Model.Update{
+            chosen_inline_result: var!(object),
+            message: var!(message)
+          } = var!(update)) when var!(object) != nil do
           unquote(body)
         end
       end
@@ -324,7 +378,11 @@ defmodule Mix.Tasks.Ooyodo.New do
 
     defmacro handle(:callback_query, do: body) do
       quote do
-        def process_update(%Nadia.Model.Update{:callback_query => var!(object), :message => var!(message)} = var!(update)) when var!(object) != nil do
+        def process_update(
+          %Nadia.Model.Update{
+            callback_query: var!(object),
+            message: var!(message)
+          } = var!(update)) when var!(object) != nil do
           unquote(body)
         end
       end
@@ -332,7 +390,13 @@ defmodule Mix.Tasks.Ooyodo.New do
 
     defmacro handle(type, do: body) do
       quote do
-        def process_update(%Nadia.Model.Update{message: %Nadia.Model.Message{unquote(type) => var!(object)} = var!(message)} = var!(update)) when var!(object) != nil do
+        def process_update(
+          %Nadia.Model.Update{
+            message: %Nadia.Model.Message{
+              unquote(type) => var!(object),
+              chat: %{id: var!(id)}
+            } = var!(message)
+          } = var!(update)) when var!(object) != nil do
           unquote(body)
         end
       end
@@ -356,7 +420,7 @@ defmodule Mix.Tasks.Ooyodo.New do
 
     defmacro reply(function) do
       quote do
-        var!(message).chat.id |> unquote(function)
+        var!(id) |> unquote(function)
       end
     end
 
