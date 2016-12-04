@@ -170,6 +170,9 @@ defmodule Mix.Tasks.Ooyodo.New do
   # Also ignore archive artifacts (built via "mix archive.build").
   *.ez
   mix.lock
+
+  # Ignore secret config
+  secret.exs
   """
 
   embed_template :mix, """
