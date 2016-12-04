@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Ooyodo.New do
   use Mix.Task
   import Mix.Generator
 
-  @shortdoc "whatever"
+  @shortdoc "Ooyodo Telegram Bot"
 
   @switches [app: :string, module: :string, token: :string, bot: :string]
 
