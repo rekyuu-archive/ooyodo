@@ -28,8 +28,8 @@ $ mix appname
 
 Tested update types:
 
-[x] Messages
-[x] Inline queries
-[x] Edited messages
-[ ] Chosen inline results
-[ ] Callback queries
+- [x] Messages
+- [x] Inline queries
+- [x] Edited messages
+- [ ] Chosen inline results
+- [ ] Callback queries

@@ -144,11 +144,11 @@ defmodule Mix.Tasks.Ooyodo.New do
 
   Tested update types:
 
-  [x] Messages
-  [x] Inline queries
-  [x] Edited messages
-  [ ] Chosen inline results
-  [ ] Callback queries
+  - [x] Messages
+  - [x] Inline queries
+  - [x] Edited messages
+  - [ ] Chosen inline results
+  - [ ] Callback queries
   """
 
   embed_text :gitignore, """
